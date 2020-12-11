@@ -1,0 +1,43 @@
+<ProjectOneLineIconListItem>
+
+    IconLeftWidget:
+        icon: root.icon
+
+
+<ProjectOneLineLeftIconItem>
+
+    IconLeftWidget:
+        icon: root.icon
+
+
+<ProjectTwoLineLeftIconItem>
+
+    IconLeftWidget:
+        icon: root.icon
+
+
+<ProjectTwoLineLeftAvatarItem>
+    secondary_theme_text_color: "Custom"
+    secondary_text_color: app.theme_cls.primary_color
+
+    ImageLeftWidget:
+        source: root.icon
+
+
+<ProjectOneLineLeftAvatarItem>
+
+    ImageLeftWidget:
+        source: root.source
+
+
+<ProjectOneLineLeftWidgetItem>
+    on_release: app.theme_cls.primary_palette = root.text
+
+    LeftWidget:
+        canvas.before:
+            Color:
+                rgba: root.color
+            Ellipse:
+                pos: self.pos
+                size: self.size
+
