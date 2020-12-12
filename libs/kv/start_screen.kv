@@ -23,21 +23,6 @@
     size_hint_x: None
     width: dp(3)
 
-# <ShrinePresplashTile@Label>
-#     color: app.theme_cls.text_color
-#     font_size: "24sp"
-#     size_hint_y: None
-#     height: self.texture_size[1]
-
-# <Toolbar>
-#     md_bg_color: app.theme_cls.primary_color
-#     background_palette: "Primary"
-#     background_hue: "500"
-#     elevation: 10
-#     right_action_items: [["brightness-6", lambda x: app.switch_theme_style()], ["file-code" if self.theme_cls.device_orientation == "landscape" else "dots-vertical", lambda x: app.show_code()]]
-#     left_action_items: [["arrow-left", lambda x: app.back_to_home_screen()]]
-
-
 MDBoxLayout:
     orientation: "vertical"
 
@@ -88,8 +73,9 @@ MDBoxLayout:
         padding: ["20dp", "0dp"]
 
         VideoPlayer:
+            id: video_player
             size_hint_x: 0.7
-            source: f"{environ['PROJECT_ASSETS']}video.mp4"
+            source: ""
             state: "play"
             options: {"allow_stretch": True}
             padding: ["5dp", "5dp", "50dp", "5dp"]
@@ -103,10 +89,10 @@ MDBoxLayout:
             Camera:
                 play: True
                 id: camera
-                resolution: (640,480)
+                resolution: (1280,720)
 
             AnchorLayout:
-                size_hint_y: 0.5
+                size_hint_y: 0.2
                 anchor_x: "center"
                 anchor_y: "center"
 
@@ -115,17 +101,45 @@ MDBoxLayout:
                     theme_text_color: "Custom"
                     text_color: 0.69, 0.07, 0, 1
                     user_font_size: "48sp"
+                    on_release: app.button_record()
+
+            MDGridLayout:
+                cols: 1
+                size_hint_y: 0.6
+                orientation: "vertical"
+
+                AnchorLayout:
+                    size_hint_y: 0.5
+                    anchor_x: "center"
+                    anchor_y: "top"
+
+                    MDIconButton:
+                        icon: "account-tie-voice-off"
+                        theme_text_color: "Primary"
+                        user_font_size: "48sp"
+
+                AnchorLayout:
+                    size_hint_y: 0.5
+                    anchor_x: "center"
+                    anchor_y: "bottom"
+
+                    MDSlider:
+                        id: slider
+                        min: 0
+                        max: 100
+                        step: 20
+                        orientation: 'horizontal'
 
             AnchorLayout:
-                size_hint_y: 0.5
+                size_hint_y: 0.2
                 anchor_x: "center"
                 anchor_y: "center"
 
-                MDIconButton:
-                    icon: "account-tie-voice-off"
-                    theme_text_color: "Primary"
+                MDRoundFlatIconButton:
+                    icon: "file"
                     user_font_size: "48sp"
-
+                    text: "Select File"
+                    on_release: app.file_manager_open()
 
 <ProjectBackdropBackLayer@FloatLayout>
     scale_x: 0
