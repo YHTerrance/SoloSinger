@@ -1,4 +1,5 @@
 .history/
 
+pretrained_models/
 *.mp4
 *.html

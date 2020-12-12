@@ -140,6 +140,7 @@ def record():
     audio_thread.close()
     video_thread.close()
 
+    # Wait for the two threads to close completely
     time.sleep(1)
 
     # Terminate threads completely
