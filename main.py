@@ -1,11 +1,13 @@
 import ast
 import os
+import signal
 import sys
 from pynput.keyboard import KeyCode, Listener
 import subprocess
 import numpy
 import time
 import threading
+
 
 os.environ['KIVY_VIDEO'] = "ffpyplayer"
 os.environ["KIVY_PROFILE_LANG"] = "1"
@@ -68,8 +70,6 @@ class ProjectApp(MDApp):
         # Detect only .mp4 extensions
         self.file_manager.ext = [".mp4"]
 
-        print(f"images_path = {images_path}")
-        Loader.loading_image = f"{images_path}transparent.png"
 
     def build(self):
 
@@ -103,7 +103,15 @@ class ProjectApp(MDApp):
 
         # Set video path
         self.source_video_path = path
+
+        # Select video player and display manager classes
         self.video_player = self.root.ids["backdrop_front_layer"].ids["video_player"]
+        self.video_player.source = ""
+
+        self.display_manager = self.root.ids["backdrop_front_layer"].ids["display_manager"]
+
+        # Set default screen to loading screen
+        self.display_manager.current = "loading_screen"
 
         # Render videos with different vocal percentages
         self.render_videos()
@@ -115,26 +123,32 @@ class ProjectApp(MDApp):
     def on_value(self, instance, percentage):
         self.video_player.source = f"./tmp/mixed_{int(percentage)}.mp4"
 
-    def render_videos(self):
+    # Try to set video path after preloading subprocess has ended
+    def set_video_path(self):
+        # Check if preloading process has ended
+        poll = self.preloading_process.poll()
+        while poll == None:
+            time.sleep(4)
+            print("polling!!")
+            poll = self.preloading_process.poll()
 
-        # Separate video and audio into two files
-        cmd = f"yes | ffmpeg -i {self.source_video_path} ./tmp/only_audio.wav"
-        subprocess.call(cmd, shell=True)
-
-        cmd = f"yes | ffmpeg -i {self.source_video_path} -an -vcodec copy ./tmp/only_video.mp4"
-        subprocess.call(cmd, shell=True)
-
-        # Separate vocals and audios
-        cmd = f"yes | spleeter separate -i ./tmp/only_audio.wav -p spleeter:2stems -o ./tmp/"
-        subprocess.call(cmd, shell=True)
-
-        # Generate MVs with different vocal percentages
-        for i in numpy.arange(0, 1.2, 0.2):
-            cmd = f"yes | ffmpeg  -i ./tmp/only_video.mp4 -channel_layout stereo -i ./tmp/only_audio/vocals.wav -channel_layout stereo -i ./tmp/only_audio/accompaniment.wav -filter_complex '[1]volume={i}[a1];[2]volume=1[a2];[a1][a2]amix=inputs=2[a]' -map 0:v -map '[a]' -c:v copy ./tmp/mixed_{int(i*100)}.mp4"
-            subprocess.call(cmd, shell=True)
-
+        print("set video source")
         # Set default to 0
         self.video_player.source = "./tmp/mixed_0.mp4"
+
+        # Set display to video
+        self.display_manager.current = "video_screen"
+
+
+    def render_videos(self):
+
+        # Create process that preloads videos
+        self.preloading_process = subprocess.Popen(["python3", "-u", f"{os.environ['PROJECT_ROOT']}/utils/preload_videos.py"], stdin=subprocess.PIPE, bufsize=1, universal_newlines=True)
+        self.preloading_process.stdin.write(f"{self.source_video_path}\n")
+
+        # Thread that checks if subprocess has ended
+        check_preloading_process_thread = threading.Thread(target=self.set_video_path)
+        check_preloading_process_thread.start()
 
     def exit_manager(self, *args):
         '''Called when the user reaches the root of the directory tree.'''
@@ -152,9 +166,6 @@ class ProjectApp(MDApp):
         Builder.load_file(
             f"{os.environ['PROJECT_ROOT']}/libs/kv/dialog_change_theme.kv",
         )
-        Builder.load_file(
-            f"{os.environ['PROJECT_ROOT']}/libs/kv/base_content.kv",
-        )
 
     def back_to_home_screen(self):
         self.root.ids.screen_manager.current = "home"
@@ -170,7 +181,7 @@ class ProjectApp(MDApp):
 
     # Starts our recording process
     def record(self):
-        self.recording_process = subprocess.Popen(["python3", "-u", f"{os.environ['PROJECT_ROOT']}/record/video.py"], stdin=subprocess.PIPE, bufsize=1, universal_newlines=True)
+        self.recording_process = subprocess.Popen(["python3", "-u", f"{os.environ['PROJECT_ROOT']}/utils/video.py"], stdin=subprocess.PIPE, bufsize=1, universal_newlines=True)
         self.recording_process.stdin.write("Start Recording!!\n")
 
     # Terminates our recording process

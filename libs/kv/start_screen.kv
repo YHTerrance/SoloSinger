@@ -70,21 +70,45 @@ MDBoxLayout:
 
     MDGridLayout:
         cols: 3
-        padding: ["20dp", "0dp"]
+        padding: ["20dp", "0dp", "20dp", "20dp"]
 
-        VideoPlayer:
-            id: video_player
-            size_hint_x: 0.7
-            source: ""
-            state: "play"
-            options: {"allow_stretch": True}
-            padding: ["5dp", "5dp", "50dp", "5dp"]
+        ScreenManager:
+            id: display_manager
+            size_hint_y: 1
+            size_hint_x: 0.68
+
+            Screen:
+                name: "loading_screen"
+                AnchorLayout:
+                    # size_hint_y: 0.5
+                    anchor_x: "center"
+                    anchor_y: "center"
+                    Image:
+                        anim_delay: 0.05
+                        source: "./assets/loading.gif"
+
+            Screen:
+                name: "video_screen"
+                AnchorLayout:
+                    anchor_x: "center"
+                    anchor_y: "top"
+                    size_hint_y: 1
+
+                    VideoPlayer:
+                        id: video_player
+                        source: ""
+                        state: "play"
+                        options: {"allow_stretch": True}
+
+        Widget:
+            size_hint_x: 0.02
+
 
         MDGridLayout:
             size_hint_x: 0.3
             orientation: 'vertical'
             cols: 1
-            padding: '5dp'
+            padding: ["0dp", "10dp", "0dp", "0dp"]
 
             Camera:
                 play: True
@@ -109,25 +133,50 @@ MDBoxLayout:
                 orientation: "vertical"
 
                 AnchorLayout:
-                    size_hint_y: 0.5
+
+                    size_hint_y: None
+                    height: "25dp"
                     anchor_x: "center"
                     anchor_y: "top"
 
-                    MDIconButton:
-                        icon: "account-tie-voice-off"
-                        theme_text_color: "Primary"
-                        user_font_size: "48sp"
+                    MDGridLayout:
+                        cols: 3
+                        size_hint: 1, 1
+                        orientation: "horizontal"
+
+                        MDIconButton:
+                            size_hint: 0.3, None
+                            height: dp(5)
+                            icon: "account-tie-voice-off"
+                            theme_text_color: "Primary"
+                            user_font_size: "48sp"
+
+                        Widget:
+                            height: dp(5)
+                            size_hint: 0.4, None
+
+                        MDIconButton:
+                            size_hint: 0.3, None
+                            height: dp(5)
+                            icon: "account-tie-voice"
+                            theme_text_color: "Primary"
+                            user_font_size: "48sp"
 
                 AnchorLayout:
-                    size_hint_y: 0.5
+                    size_hint_y: None
+                    height: "150dp"
+
                     anchor_x: "center"
                     anchor_y: "bottom"
 
                     MDSlider:
+                        size_hint_y: 1
                         id: slider
                         min: 0
                         max: 100
                         step: 20
+                        hint: True
+                        color: app.theme_cls.accent_color
                         orientation: 'horizontal'
 
             AnchorLayout:
@@ -138,7 +187,15 @@ MDBoxLayout:
                 MDRoundFlatIconButton:
                     icon: "file"
                     user_font_size: "48sp"
+
+                    size_hint: None, None
+                    size: 250, 75
                     text: "Select File"
+                    text_size: self.size
+                    halign: "center"
+                    valign: "center"
+
+                    # pos_hint: {"center_x": .5, "center_y": .5}
                     on_release: app.file_manager_open()
 
 <ProjectBackdropBackLayer@FloatLayout>

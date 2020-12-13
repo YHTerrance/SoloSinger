@@ -73,11 +73,13 @@ class AudioThread(threading.Thread):
         self.format = pyaudio.paInt16
         self.audio_filename = filename
         self.audio = pyaudio.PyAudio()
+
         self.stream = self.audio.open(format=self.format,
                                       channels=self.channels,
                                       rate=self.rate,
                                       input=True,
-                                      frames_per_buffer = self.frames_per_buffer)
+                                      frames_per_buffer = self.frames_per_buffer,
+                                      )
         self.audio_frames = []
 
     def run(self):
@@ -108,17 +110,6 @@ class AudioThread(threading.Thread):
         waveFile.writeframes(b''.join(self.audio_frames))
         waveFile.close()
         print("Finish writing audio file")
-
-
-def on_press(key):
-    pass
-    # print('{0} pressed'.format(key))
-
-def on_release(key):
-    print('{0} release'.format(key))
-    if key.char == 'q':
-        # Stop listener
-        return False
 
 def record():
     # Create new threads

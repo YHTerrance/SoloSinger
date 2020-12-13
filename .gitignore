@@ -1,5 +1,7 @@
 .history/
 
+libs/baseclass/__pycache__/
+
 pretrained_models/
 *.mp4
 *.html
