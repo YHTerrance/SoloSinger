@@ -8,7 +8,7 @@ import numpy
 import time
 import threading
 
-
+# Set environments
 os.environ['KIVY_VIDEO'] = "ffpyplayer"
 os.environ["KIVY_PROFILE_LANG"] = "1"
 
@@ -25,13 +25,12 @@ from kivy.uix.videoplayer import VideoPlayer
 from kivymd.uix.filemanager import MDFileManager
 from kivymd.toast import toast
 
-
 from libs.baseclass.dialog_change_theme import (
     ProjectDialogChangeTheme,
     ProjectUsageCode,
 )
 from libs.baseclass.expansionpanel import ProjectExpansionPanelContent
-from libs.baseclass.list_items import (  # NOQA: F401
+from libs.baseclass.list_items import (
     ProjectOneLineLeftIconItem,
 )
 
@@ -39,18 +38,19 @@ from kivymd import __version__, images_path
 from kivymd.app import MDApp
 from kivymd.uix.expansionpanel import MDExpansionPanel, MDExpansionPanelOneLine
 
+
 if getattr(sys, "frozen", False):  # bundle mode with PyInstaller
     os.environ["PROJECT_ROOT"] = sys._MEIPASS
 else:
     sys.path.append(os.path.abspath(__file__).split("demos")[0])
     os.environ["PROJECT_ROOT"] = str(Path(__file__).parent)
-    # os.environ["PROJECT_ROOT"] = os.path.dirname(os.path.abspath(__file__))
     print(f'PROJECT ROOT = {os.environ["PROJECT_ROOT"]}')
 
 
 os.environ["PROJECT_ASSETS"] = os.path.join(
     os.environ["PROJECT_ROOT"], f"assets{os.sep}"
 )
+
 Window.softinput_mode = "below_target"
 class ProjectApp(MDApp):
     def __init__(self, **kwargs):
@@ -86,6 +86,7 @@ class ProjectApp(MDApp):
         self.stop()
         return True
 
+    # Open file manager to select video
     def file_manager_open(self):
         self.file_manager.show(f"{os.environ['PROJECT_ROOT']}")  # output manager to the screen
         self.manager_open = True
@@ -107,7 +108,6 @@ class ProjectApp(MDApp):
         # Select video player and display manager classes
         self.video_player = self.root.ids["backdrop_front_layer"].ids["video_player"]
         self.video_player.source = ""
-
         self.display_manager = self.root.ids["backdrop_front_layer"].ids["display_manager"]
 
         # Set default screen to loading screen
