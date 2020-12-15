@@ -82,7 +82,7 @@ class ProjectApp(MDApp):
     # When kivy app is closed
     def on_request_close(self, *args):
         print("on request close")
-        os.system("rm -rf ./tmp/*")
+        os.system(f"rm -rf {os.environ['PROJECT_ROOT']}/tmp/*")
         self.stop()
         return True
 
@@ -133,7 +133,7 @@ class ProjectApp(MDApp):
 
     # Change video based on slider
     def on_value(self, instance, percentage):
-        self.video_player.source = f"./tmp/mixed_{int(percentage)}.mp4"
+        self.video_player.source = f"{os.environ['PROJECT_ROOT']}/tmp/mixed_{int(percentage)}.mp4"
 
     # Try to set video path after preloading subprocess has ended
     def set_video_path(self):
@@ -146,7 +146,7 @@ class ProjectApp(MDApp):
 
         print("set video source")
         # Set default to 0
-        self.video_player.source = "./tmp/mixed_0.mp4"
+        self.video_player.source = f"{os.environ['PROJECT_ROOT']}/tmp/mixed_0.mp4"
 
         # Set display to video
         self.display_manager.current = "video_screen"

@@ -2,6 +2,8 @@
 
 libs/baseclass/__pycache__/
 
+tmp/
+
 pretrained_models/
 *.mp4
 *.html
