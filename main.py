@@ -2,7 +2,6 @@ import ast
 import os
 import signal
 import sys
-from pynput.keyboard import KeyCode, Listener
 import subprocess
 import numpy
 import time
@@ -46,7 +45,6 @@ else:
     os.environ["PROJECT_ROOT"] = str(Path(__file__).parent)
     print(f'PROJECT ROOT = {os.environ["PROJECT_ROOT"]}')
 
-
 os.environ["PROJECT_ASSETS"] = os.path.join(
     os.environ["PROJECT_ROOT"], f"assets{os.sep}"
 )
@@ -70,11 +68,13 @@ class ProjectApp(MDApp):
         # Detect only .mp4 extensions
         self.file_manager.ext = [".mp4"]
 
-
+    # Load the .kv file
     def build(self):
 
         Window.bind(on_request_close=self.on_request_close)
-
+        Builder.load_file(
+            f"{os.environ['PROJECT_ROOT']}/libs/kv/list_items.kv"
+        )
         return Builder.load_file(
             f"{os.environ['PROJECT_ROOT']}/libs/kv/start_screen.kv"
         )
@@ -85,6 +85,23 @@ class ProjectApp(MDApp):
         os.system("rm -rf ./tmp/*")
         self.stop()
         return True
+
+    # Executed after first rendering
+    def on_start(self):
+        """Creates a list of items with examples on start screen."""
+        # Select components that we would further manipulate
+        self.video_player = self.root.ids["backdrop_front_layer"].ids["video_player"]
+
+        self.display_manager = self.root.ids["backdrop_front_layer"].ids["display_manager"]
+
+        self.slider = self.root.ids["backdrop_front_layer"].ids["slider"]
+        self.slider.bind(value = self.on_value)
+
+        # Create tmp directory if it does not yey exist
+        if not os.path.exists('tmp'):
+            os.makedirs('tmp')
+
+        Builder.load_file(f"{os.environ['PROJECT_ROOT']}/libs/kv/dialog_change_theme.kv")
 
     # Open file manager to select video
     def file_manager_open(self):
@@ -106,18 +123,13 @@ class ProjectApp(MDApp):
         self.source_video_path = path
 
         # Select video player and display manager classes
-        self.video_player = self.root.ids["backdrop_front_layer"].ids["video_player"]
         self.video_player.source = ""
-        self.display_manager = self.root.ids["backdrop_front_layer"].ids["display_manager"]
 
         # Set default screen to loading screen
         self.display_manager.current = "loading_screen"
 
         # Render videos with different vocal percentages
         self.render_videos()
-
-        self.slider = self.root.ids["backdrop_front_layer"].ids["slider"]
-        self.slider.bind(value = self.on_value)
 
     # Change video based on slider
     def on_value(self, instance, percentage):
@@ -143,7 +155,7 @@ class ProjectApp(MDApp):
     def render_videos(self):
 
         # Create process that preloads videos
-        self.preloading_process = subprocess.Popen(["python3", "-u", f"{os.environ['PROJECT_ROOT']}/utils/preload_videos.py"], stdin=subprocess.PIPE, bufsize=1, universal_newlines=True)
+        self.preloading_process = subprocess.Popen([sys.executable, "-u", f"{os.environ['PROJECT_ROOT']}/utils/preload_videos.py"], stdin=subprocess.PIPE, bufsize=1, universal_newlines=True)
         self.preloading_process.stdin.write(f"{self.source_video_path}\n")
 
         # Thread that checks if subprocess has ended
@@ -155,33 +167,12 @@ class ProjectApp(MDApp):
         self.manager_open = False
         self.file_manager.close()
 
-    def show_dialog_change_theme(self):
-        if not self.dialog_change_theme:
-            self.dialog_change_theme = ProjectDialogChangeTheme()
-            self.dialog_change_theme.set_list_colors_themes()
-        self.dialog_change_theme.open()
-
-    def on_start(self):
-        """Creates a list of items with examples on start screen."""
-        Builder.load_file(
-            f"{os.environ['PROJECT_ROOT']}/libs/kv/dialog_change_theme.kv",
-        )
-
-    def back_to_home_screen(self):
-        self.root.ids.screen_manager.current = "home"
-
-    def switch_theme_style(self):
-        self.theme_cls.theme_style = (
-            "Light" if self.theme_cls.theme_style == "Dark" else "Dark"
-        )
-        self.root.ids.backdrop.ids._front_layer.md_bg_color = [0, 0, 0, 0]
-
     def callback_for_menu_items(self, *args):
         toast(args[0])
 
     # Starts our recording process
     def record(self):
-        self.recording_process = subprocess.Popen(["python3", "-u", f"{os.environ['PROJECT_ROOT']}/utils/video.py"], stdin=subprocess.PIPE, bufsize=1, universal_newlines=True)
+        self.recording_process = subprocess.Popen([sys.executable, "-u", f"{os.environ['PROJECT_ROOT']}/utils/video.py"], stdin=subprocess.PIPE, bufsize=1, universal_newlines=True)
         self.recording_process.stdin.write("Start Recording!!\n")
 
     # Terminates our recording process
@@ -200,6 +191,22 @@ class ProjectApp(MDApp):
             self.recording = True
             self.record()
 
+    # Show the dialog where user can change themes
+    def show_dialog_change_theme(self):
+        if not self.dialog_change_theme:
+            self.dialog_change_theme = ProjectDialogChangeTheme()
+            self.dialog_change_theme.set_list_colors_themes()
+        self.dialog_change_theme.open()
+
+    def back_to_home_screen(self):
+        self.root.ids.screen_manager.current = "home"
+
+    def switch_theme_style(self):
+        self.theme_cls.theme_style = (
+            "Light" if self.theme_cls.theme_style == "Dark" else "Dark"
+        )
+        self.root.ids.backdrop.ids._front_layer.md_bg_color = [0, 0, 0, 0]
+
     def add_expansion_panel(self, card):
         content = ProjectExpansionPanelContent()
         card.add_widget(
@@ -210,5 +217,5 @@ class ProjectApp(MDApp):
             )
         )
 
-
-ProjectApp().run()
+if __name__ == "__main__":
+    ProjectApp().run()
