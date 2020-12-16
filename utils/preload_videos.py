@@ -1,5 +1,6 @@
 import subprocess
 import numpy as np
+import sys
 
 source_video_path = input()
 
@@ -11,7 +12,7 @@ cmd = f"yes | ffmpeg -i {source_video_path} -an -vcodec copy ./tmp/only_video.mp
 subprocess.call(cmd, shell=True)
 
 # Separate vocals and audios
-cmd = f"yes | spleeter separate -i ./tmp/only_audio.wav -p spleeter:2stems -o ./tmp/"
+cmd = f"yes | {sys.executable} -m spleeter separate -i ./tmp/only_audio.wav -p spleeter:2stems -o ./tmp/"
 subprocess.call(cmd, shell=True)
 
 # Generate MVs with different vocal percentages
