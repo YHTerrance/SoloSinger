@@ -188,7 +188,9 @@ if __name__ == "__main__":
     subprocess.call(cmd, shell=True)
 
     # Remove unused files
-    os.system("rm ./tmp/temp_video.mp4 ./tmp/temp_audio.wav ./tmp/temp_video2.mp4");
+    os.remove("tmp/temp_video.mp4")
+    os.remove("tmp/temp_audio.wav")
+    os.remove("tmp/temp_video2.mp4")
 
     print("Exiting Main Thread")
 
