@@ -16,11 +16,9 @@ class VideoThread(threading.Thread):
         # State of the of the video thread
         self.open = True
         self.closed = False
-
         self.device_index = camindex    # for web cam
         self.fps = fps                  # fps captured by camera
         self.fourcc = fourcc            # to specify the recorded data format
-
         self.video_cap = cv2.VideoCapture(self.device_index)
 
         # Recorded frame size of our video (depend and vary according to the camera used)

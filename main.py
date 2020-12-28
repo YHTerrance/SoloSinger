@@ -70,7 +70,6 @@ class ProjectApp(MDApp):
 
     # Load the .kv file
     def build(self):
-
         Window.bind(on_request_close=self.on_request_close)
         Builder.load_file(
             f"{os.environ['PROJECT_ROOT']}/libs/kv/list_items.kv"
@@ -78,25 +77,6 @@ class ProjectApp(MDApp):
         return Builder.load_file(
             f"{os.environ['PROJECT_ROOT']}/libs/kv/start_screen.kv"
         )
-
-    # When kivy app is closed
-    def on_request_close(self, *args):
-        print("on request close")
-
-        folder = f"{os.environ['PROJECT_ROOT']}/tmp/"
-        # Delete all files in tmp/ folder
-        for filename in os.listdir(folder):
-            file_path = os.path.join(folder, filename)
-        try:
-            if os.path.isfile(file_path) or os.path.islink(file_path):
-                os.unlink(file_path)
-            elif os.path.isdir(file_path):
-                shutil.rmtree(file_path)
-        except Exception as e:
-            print('Failed to delete %s. Reason: %s' % (file_path, e))
-
-        self.stop()
-        return True
 
     # Executed after first rendering
     def on_start(self):
@@ -114,6 +94,32 @@ class ProjectApp(MDApp):
             os.makedirs('tmp')
 
         Builder.load_file(f"{os.environ['PROJECT_ROOT']}/libs/kv/dialog_change_theme.kv")
+
+    # Executed when the app is closed
+    def on_request_close(self, *args):
+        print("on request close")
+
+        folder = f"{os.environ['PROJECT_ROOT']}/tmp/"
+
+        # Delete all files in tmp/ folder
+        for filename in os.listdir(folder):
+            file_path = os.path.join(folder, filename)
+
+        try:
+            if os.path.isfile(file_path) or os.path.islink(file_path):
+                os.unlink(file_path)
+            elif os.path.isdir(file_path):
+                shutil.rmtree(file_path)
+
+        except Exception as e:
+            print('Failed to delete %s. Reason: %s' % (file_path, e))
+
+        self.stop()
+        return True
+
+    # ---------------------------------------------------------------------------- #
+    #                         Preload videos functionality                         #
+    # ---------------------------------------------------------------------------- #
 
     # Open file manager to select video
     def file_manager_open(self):
@@ -143,9 +149,23 @@ class ProjectApp(MDApp):
         # Render videos with different vocal percentages
         self.render_videos()
 
-    # Change video based on slider
-    def on_value(self, instance, percentage):
-        self.video_player.source = f"{os.environ['PROJECT_ROOT']}/tmp/mixed_{int(percentage)}.mp4"
+    # Call subprocess to prerender MV
+    def render_videos(self):
+          # Create process that preloads videos
+        self.preloading_process = subprocess.Popen([sys.executable, "-u", f"{os.environ['PROJECT_ROOT']}/utils/x"], stdin=subprocess.PIPE, bufsize=1, universal_newlines=True)
+        self.preloading_process.stdin.write(f"{self.source_video_path}\n")
+
+        # Thread that checks if subprocess has ended
+        check_preloading_process_thread = threading.Thread(target=self.set_video_path)
+        check_preloading_process_thread.start()
+
+    def exit_manager(self, *args):
+        '''Called when the user reaches the root of the directory tree.'''
+        self.manager_open = False
+        self.file_manager.close()
+
+    def callback_for_menu_items(self, *args):
+        toast(args[0])
 
     # Try to set video path after preloading subprocess has ended
     def set_video_path(self):
@@ -163,34 +183,14 @@ class ProjectApp(MDApp):
         # Set display to video
         self.display_manager.current = "video_screen"
 
+    # Change video based on slider
+    def on_value(self, instance, percentage):
+        self.video_player.source = f"{os.environ['PROJECT_ROOT']}/tmp/mixed_{int(percentage)}.mp4"
 
-    def render_videos(self):
 
-        # Create process that preloads videos
-        self.preloading_process = subprocess.Popen([sys.executable, "-u", f"{os.environ['PROJECT_ROOT']}/utils/preload_videos.py"], stdin=subprocess.PIPE, bufsize=1, universal_newlines=True)
-        self.preloading_process.stdin.write(f"{self.source_video_path}\n")
-
-        # Thread that checks if subprocess has ended
-        check_preloading_process_thread = threading.Thread(target=self.set_video_path)
-        check_preloading_process_thread.start()
-
-    def exit_manager(self, *args):
-        '''Called when the user reaches the root of the directory tree.'''
-        self.manager_open = False
-        self.file_manager.close()
-
-    def callback_for_menu_items(self, *args):
-        toast(args[0])
-
-    # Starts our recording process
-    def record(self):
-        self.recording_process = subprocess.Popen([sys.executable, "-u", f"{os.environ['PROJECT_ROOT']}/utils/video.py"], stdin=subprocess.PIPE, bufsize=1, universal_newlines=True)
-        self.recording_process.stdin.write("Start Recording!!\n")
-
-    # Terminates our recording process
-    def stop_record(self):
-        self.recording_process.stdin.write("end\n")
-        print("finish writing end to child")
+    # ---------------------------------------------------------------------------- #
+    #                        Web cam recording functionality                       #
+    # ---------------------------------------------------------------------------- #
 
     # Recording button is pressed
     def button_record(self):
@@ -203,22 +203,21 @@ class ProjectApp(MDApp):
             self.recording = True
             self.record()
 
-    # Show the dialog where user can change themes
-    def show_dialog_change_theme(self):
-        if not self.dialog_change_theme:
-            self.dialog_change_theme = ProjectDialogChangeTheme()
-            self.dialog_change_theme.set_list_colors_themes()
-        self.dialog_change_theme.open()
+    # Starts our recording process
+    def record(self):
+        self.recording_process = subprocess.Popen([sys.executable, "-u", f"{os.environ['PROJECT_ROOT']}/utils/video.py"], stdin=subprocess.PIPE, bufsize=1, universal_newlines=True)
+        self.recording_process.stdin.write("Start Recording!!\n")
 
-    def back_to_home_screen(self):
-        self.root.ids.screen_manager.current = "home"
+    # Terminates our recording process
+    def stop_record(self):
+        self.recording_process.stdin.write("end\n")
+        print("finish writing end to child")
 
-    def switch_theme_style(self):
-        self.theme_cls.theme_style = (
-            "Light" if self.theme_cls.theme_style == "Dark" else "Dark"
-        )
-        self.root.ids.backdrop.ids._front_layer.md_bg_color = [0, 0, 0, 0]
+    # ---------------------------------------------------------------------------- #
+    #                       Top expansion panel functionality                      #
+    # ---------------------------------------------------------------------------- #
 
+    # Top expansion panel
     def add_expansion_panel(self, card):
         content = ProjectExpansionPanelContent()
         card.add_widget(
@@ -228,6 +227,25 @@ class ProjectApp(MDApp):
                 panel_cls=MDExpansionPanelOneLine(text=f"KivyMD {__version__}"),
             )
         )
+
+    # Show the dialog where user can change themes
+    def show_dialog_change_theme(self):
+        if not self.dialog_change_theme:
+            self.dialog_change_theme = ProjectDialogChangeTheme()
+            self.dialog_change_theme.set_list_colors_themes()
+        self.dialog_change_theme.open()
+
+    # Swich between dark and light themes
+    def switch_theme_style(self):
+        self.theme_cls.theme_style = (
+            "Light" if self.theme_cls.theme_style == "Dark" else "Dark"
+        )
+        self.root.ids.backdrop.ids._front_layer.md_bg_color = [0, 0, 0, 0]
+
+    # Clicked on to return to home screen
+    def back_to_home_screen(self):
+        self.root.ids.screen_manager.current = "home"
+
 
 if __name__ == "__main__":
     ProjectApp().run()
