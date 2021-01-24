@@ -58,6 +58,7 @@ class ProjectApp(MDApp):
         self.toolbar = None
         self.data_screens = {}
         self.recording = False
+        self.loading = True
 
         # Initialize file manager status
         self.manager_open = False
@@ -145,6 +146,7 @@ class ProjectApp(MDApp):
 
         # Set default screen to loading screen
         self.display_manager.current = "loading_screen"
+        self.loading = True
 
         # Render videos with different vocal percentages
         self.render_videos()
@@ -152,7 +154,7 @@ class ProjectApp(MDApp):
     # Call subprocess to prerender MV
     def render_videos(self):
           # Create process that preloads videos
-        self.preloading_process = subprocess.Popen([sys.executable, "-u", f"{os.environ['PROJECT_ROOT']}/utils/x"], stdin=subprocess.PIPE, bufsize=1, universal_newlines=True)
+        self.preloading_process = subprocess.Popen([sys.executable, "-u", f"{os.environ['PROJECT_ROOT']}/utils/preload_videos.py"], stdin=subprocess.PIPE, bufsize=1, universal_newlines=True)
         self.preloading_process.stdin.write(f"{self.source_video_path}\n")
 
         # Thread that checks if subprocess has ended
@@ -182,11 +184,12 @@ class ProjectApp(MDApp):
 
         # Set display to video
         self.display_manager.current = "video_screen"
+        self.loading = False
 
     # Change video based on slider
     def on_value(self, instance, percentage):
-        self.video_player.source = f"{os.environ['PROJECT_ROOT']}/tmp/mixed_{int(percentage)}.mp4"
-
+        if not self.loading:
+            self.video_player.source = f"{os.environ['PROJECT_ROOT']}/tmp/mixed_{int(percentage)}.mp4"
 
     # ---------------------------------------------------------------------------- #
     #                        Web cam recording functionality                       #
