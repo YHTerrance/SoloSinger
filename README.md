@@ -1,5 +1,7 @@
 # karaoke_sing_along
 
+[![Demo Video](https://img.youtube.com/vi/npaI5JOJh84/0.jpg)](https://www.youtube.com/watch?v=npaI5JOJh84)
+
 ## Tested environment
 
 * Python 3.7.9
